@@ -24,66 +24,72 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  void startListening() async {
+    if (!isListening) {
+      var available = await speechText.initialize();
+      if (available) {
+        setState(() {
+          isListening = true;
+          speechText.listen(
+            onResult: (result) {
+              setState(() {
+                text = result.recognizedWords;
+              });
+            },
+          );
+        });
+      }
+    }
+  }
+
+  void stopListening() {
+    setState(() {
+      isListening = false;
+    });
+    speechText.stop();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
         actions: [
-          chooseLang(context),
+          Padding(
+              padding: const EdgeInsets.only(right: 10),
+              child: chooseLang(context)),
         ],
       ),
-      body: SingleChildScrollView(
-        reverse: true,
-        physics: const BouncingScrollPhysics(),
-        child: Text(
-          text,
-          style: Theme.of(context).textTheme.headlineMedium,
+      body: Center(
+        child: SingleChildScrollView(
+          reverse: true,
+          physics: const BouncingScrollPhysics(),
+          child: Text(
+            text,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
         ),
       ),
       floatingActionButtonLocation:
           FloatingActionButtonLocation.miniCenterFloat,
-      floatingActionButton: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          GestureDetector(
-            onTapDown: (details) async {
-              if (!isListening) {
-                var available = await speechText.initialize();
-                if (available) {
-                  setState(() {
-                    isListening = true;
-                    speechText.listen(
-                      onResult: (result) {
-                        setState(() {
-                          text = result.recognizedWords;
-                        });
-                      },
-                    );
-                  });
-                }
-              }
-            },
-            onTapUp: (details) {
-              setState(() {
-                isListening = false;
-              });
-              speechText.stop();
-            },
-            child: !isListening
-                ? const CircleAvatar(child: Icon(Icons.mic))
-                : const CircleAvatar(child: Icon(Icons.stop)),
-          ),
-        ],
+      floatingActionButton: GestureDetector(
+        onTapDown: (details) {
+          startListening();
+        },
+        onTapUp: (details) {
+          stopListening();
+        },
+        child: !isListening
+            ? const CircleAvatar(child: Icon(Icons.mic))
+            : const CircleAvatar(child: Icon(Icons.stop)),
       ),
     );
   }
 
   DropdownButton chooseLang(BuildContext context) => DropdownButton(
       underline: const SizedBox.shrink(),
-      //! End. InternetBloc
       icon: const Icon(
-        Icons.language_rounded,
+        Icons.translate,
         color: Color.fromARGB(255, 255, 255, 255),
       ),
       onChanged: (value) {
